@@ -1,4 +1,5 @@
 package com.example.myapplication.app;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
@@ -7,7 +8,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+
 import org.w3c.dom.Text;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -30,24 +33,24 @@ public class MainActivity extends ActionBarActivity {
     static int numberOfThreads = 4;
     String myLinks;
     String ImagePath;
+    final ArrayList<DownloadThread> myListOfThread = new ArrayList<DownloadThread>();
+    final LinkedBlockingQueue<String> myStringQueue = new LinkedBlockingQueue<String>();                 // queue of links to download
+    LinkedBlockingQueue<String> myImages;                                 //  queue of images
+    DownloadThread myThread;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
 
-        final ArrayList <DownloadThread> myListOfThread = new ArrayList<DownloadThread>();
-        final LinkedBlockingQueue <String> myStringQueue = new LinkedBlockingQueue<String>();                 // queue of links to download
-        final LinkedBlockingQueue<String> myImages = new LinkedBlockingQueue<String>();                                   //  queue of images
-
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         final Button download = (Button) findViewById(R.id.download);
 //        Text CatDownload = (Text) findViewById(R.id.CatDownload);
         final ImageView myImageViev = (ImageView) findViewById(R.id.imageView);
-        final DownloadThread myThread = new DownloadThread();
+
         download.setEnabled(true);
 
         new Thread(new Runnable() {
@@ -66,7 +69,6 @@ public class MainActivity extends ActionBarActivity {
         download.setOnClickListener(new View.OnClickListener() {
 
 
-
             @Override
             public void onClick(View view) {
                 download.setEnabled(false);
@@ -77,9 +79,9 @@ public class MainActivity extends ActionBarActivity {
 
                         myStringQueue.add(myLinks);
                     }
-                    for (int i = 0; i <numberOfThreads; i++) {
+                    for (int i = 0; i < numberOfThreads; i++) {
+                        DownloadThread myThread = new DownloadThread();
                         myListOfThread.add(myThread);
-
                         myThread.start();
                     }
                     while (!myStringQueue.isEmpty()) {
@@ -88,9 +90,6 @@ public class MainActivity extends ActionBarActivity {
                     for (DownloadThread myThread : myListOfThread) {
                         myThread.join();
                     }
-
-
-
                     myThread.setMyPathDownload(ImagePath);
 
                     new Thread(new Runnable() {
@@ -105,30 +104,24 @@ public class MainActivity extends ActionBarActivity {
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
-
-                                BitmapFactory.Options myOptions  = new BitmapFactory.Options();
+                                BitmapFactory.Options myOptions = new BitmapFactory.Options();
                                 myOptions.inJustDecodeBounds = true;
-                                int memory  = myOptions.outHeight*myOptions.outWidth*4;
-                                myOptions.inJustDecodeBounds=false;
+                                int memory = myOptions.outHeight * myOptions.outWidth * 4;
+                                myOptions.inJustDecodeBounds = false;
                                 long allMemory = Runtime.getRuntime().freeMemory();
-                                if (memory>allMemory){
+                                if (memory > allMemory) {
                                     myOptions.inSampleSize = 4;
                                 }
-                                myBitmap = BitmapFactory.decodeFile(displayedImage,myOptions);
+                                myBitmap = BitmapFactory.decodeFile(displayedImage, myOptions);
                                 myImageViev.post(new Runnable() {
                                     @Override
                                     public void run() {
-
                                         myImageViev.setImageBitmap(myBitmap);
-
                                     }
                                 });
                             }
                         }
                     }).start();
-
-
-
 
                 } catch (FileNotFoundException e) {
                     System.out.println("File with links is unavailable");
@@ -165,3 +158,4 @@ public class MainActivity extends ActionBarActivity {
 ////////
 //
 }
+//////////
